@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Campaign {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  appName         String
+  industry        String
+  brandVoice      String
+  targetAudience  String
+  valueProposition String
+  budgetMonthly   Float    @default(0)
+  status          String   @default("active")
+  logoUrl         String?
+  primaryColor    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  videoScripts    VideoScript[]
+  googleAdCopies  GoogleAdCopy[]
+  seoArticles     SeoArticle[]
+  socialPosts     SocialPost[]
+  workflows       AutomationWorkflow[]
+  approvalItems   ApprovalQueueItem[]
+  keywords        Keyword[]
+}
+
+model VideoScript {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title           String
+  style           String   // "corgi-commercial" | "heygen-avatar" | "screen-capture"
+  script          String
+  shotList        String?  // JSON array stored as text
+  voiceoverText   String?
+  duration        Int?     // seconds
+  heygenVideoId   String?
+  heygenStatus    String?
+  thumbnailUrl    String?
+  approvalStatus  String   @default("draft") // draft | pending | approved | rejected | published
+  approvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  approvalItems   ApprovalQueueItem[]
+}
+
+model GoogleAdCopy {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  adGroupName     String
+  headlines       String   // JSON array of up to 15 headlines (30 char each)
+  descriptions    String   // JSON array of up to 4 descriptions (90 char each)
+  sitelinks       String?  // JSON array
+  callouts        String?  // JSON array
+  finalUrl        String
+  pathField1      String?
+  pathField2      String?
+  googleAdId      String?
+  approvalStatus  String   @default("draft")
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  conversions     Int      @default(0)
+  ctr             Float    @default(0)
+  costPerClick    Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  approvalItems   ApprovalQueueItem[]
+}
+
+model SeoArticle {
+  id                String   @id @default(cuid())
+  campaignId        String
+  campaign          Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title             String
+  slug              String
+  metaDescription   String?
+  targetKeyword     String
+  secondaryKeywords String?  // JSON array
+  body              String
+  seoScore          Int      @default(0)
+  wordCount         Int      @default(0)
+  readabilityGrade  String?
+  approvalStatus    String   @default("draft")
+  publishedUrl      String?
+  publishedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  approvalItems     ApprovalQueueItem[]
+}
+
+model SocialPost {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  platforms       String   // JSON array: ["instagram", "facebook", "linkedin", "x", "tiktok"]
+  body            String
+  hashtags        String?  // JSON array
+  mediaUrls       String?  // JSON array
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  platformPostIds String?  // JSON map of platform -> post ID
+  approvalStatus  String   @default("draft")
+  impressions     Int      @default(0)
+  engagements     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  approvalItems   ApprovalQueueItem[]
+}
+
+model AutomationWorkflow {
+  id              String   @id @default(cuid())
+  campaignId      String?
+  campaign        Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  name            String
+  description     String?
+  triggerType     String   // "schedule" | "webhook" | "manual" | "performance-threshold"
+  triggerConfig   String?  // JSON
+  steps           String?  // JSON array of step definitions
+  automationMode  String   @default("semi-auto") // "full-auto" | "semi-auto" | "manual"
+  isActive        Boolean  @default(false)
+  lastRunAt       DateTime?
+  lastRunStatus   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ApprovalQueueItem {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contentType     String   // "video-script" | "google-ad" | "seo-article" | "social-post"
+  contentId       String
+  status          String   @default("pending") // pending | approved | rejected | changes-requested
+  reviewerNotes   String?
+  createdAt       DateTime @default(now())
+  resolvedAt      DateTime?
+
+  videoScript     VideoScript?  @relation(fields: [videoScriptId], references: [id])
+  videoScriptId   String?
+  googleAdCopy    GoogleAdCopy? @relation(fields: [googleAdCopyId], references: [id])
+  googleAdCopyId  String?
+  seoArticle      SeoArticle?   @relation(fields: [seoArticleId], references: [id])
+  seoArticleId    String?
+  socialPost      SocialPost?   @relation(fields: [socialPostId], references: [id])
+  socialPostId    String?
+}
+
+model Keyword {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  term            String
+  searchVolume    Int      @default(0)
+  difficulty      Int      @default(0)
+  cpc             Float    @default(0)
+  currentRank     Int?
+  trend           String?  // JSON array of historical positions
+  trackedSince    DateTime @default(now())
+  lastChecked     DateTime?
+}
