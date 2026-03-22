@@ -2,10 +2,6 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Seed not allowed in production" }, { status: 403 });
-  }
-
   // Clean existing data
   await db.approvalQueueItem.deleteMany();
   await db.keyword.deleteMany();
