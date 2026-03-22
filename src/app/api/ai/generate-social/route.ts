@@ -57,5 +57,7 @@ CONTENT CALENDAR NOTE:
 - [Engagement strategy: what to reply when people comment]`,
   });
 
-  return result.toTextStreamResponse();
+  return new Response(result.textStream.pipeThrough(new TextEncoderStream()), {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }

@@ -70,5 +70,7 @@ VOICEOVER TEXT:
 [Clean voiceover text without stage directions, suitable for recording]`,
   });
 
-  return result.toTextStreamResponse();
+  return new Response(result.textStream.pipeThrough(new TextEncoderStream()), {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }

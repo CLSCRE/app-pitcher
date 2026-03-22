@@ -61,5 +61,7 @@ A/B TESTING NOTES:
 - [Which headline combinations to test first and why]`,
   });
 
-  return result.toTextStreamResponse();
+  return new Response(result.textStream.pipeThrough(new TextEncoderStream()), {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }

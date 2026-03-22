@@ -12,13 +12,23 @@ export default function NewGoogleAdCopy() {
   const campaignSlug = params.campaignId as string;
 
   async function handleSave(content: string, formData: Record<string, string>) {
+    // Split content at DESCRIPTIONS: to parse headlines and descriptions separately
+    const headlinesSection = content.split(/DESCRIPTIONS:/i)[0] || "";
+    const descriptionsSection = content.split(/DESCRIPTIONS:/i)[1]?.split(/\n\n/)[0] || "";
+
+    const headlines = (headlinesSection.match(/^\d+\.\s+(.+)/gm) || [])
+      .slice(0, 15)
+      .map((h) => h.replace(/^\d+\.\s+/, "").trim());
+
+    const descriptions = (descriptionsSection.match(/^\d+\.\s+(.+)/gm) || [])
+      .slice(0, 4)
+      .map((d) => d.replace(/^\d+\.\s+/, "").trim());
+
     await saveContent("google-ad", campaignSlug, {
       adGroupName: formData.adGroupName || "General",
       landingUrl: formData.landingUrl,
-      headlines: JSON.stringify(
-        (content.match(/^\d+\.\s+(.+)/gm) || []).slice(0, 15).map((h) => h.replace(/^\d+\.\s+/, ""))
-      ),
-      descriptions: JSON.stringify([]),
+      headlines: JSON.stringify(headlines),
+      descriptions: JSON.stringify(descriptions),
     }, content);
     router.push(`/campaigns/${campaignSlug}/google-ads`);
   }
