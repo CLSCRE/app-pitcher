@@ -37,11 +37,15 @@ export function WorkflowControls({ workflowId, isActive, automationMode }: Workf
   async function handleRun() {
     setLoading("run");
     try {
-      await fetch("/api/workflows", {
-        method: "PATCH",
+      const res = await fetch("/api/workflows/run", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflowId, action: "run" }),
+        body: JSON.stringify({ workflowId }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Workflow execution failed");
+      }
       router.refresh();
     } finally {
       setLoading(null);

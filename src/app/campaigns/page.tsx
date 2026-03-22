@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Video, BarChart3, Search, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Video, BarChart3, Search, Share2, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default async function CampaignsPage() {
@@ -23,11 +24,16 @@ export default async function CampaignsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Campaigns</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your marketing campaigns
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Campaigns</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your marketing campaigns
+          </p>
+        </div>
+        <Link href="/campaigns/new">
+          <Button><Plus className="mr-2 h-4 w-4" />New Campaign</Button>
+        </Link>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
