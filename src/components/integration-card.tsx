@@ -23,7 +23,7 @@ interface IntegrationCardProps {
   color: string;
   status: "connected" | "not-connected" | "available";
   fields?: IntegrationField[];
-  onConnect?: (data: Record<string, string>) => Promise<void>;
+  onConnect?: (integration: string, data: Record<string, string>) => Promise<void>;
 }
 
 export function IntegrationCard({
@@ -44,7 +44,7 @@ export function IntegrationCard({
     if (!onConnect) return;
     setLoading(true);
     try {
-      await onConnect(formData);
+      await onConnect(name.toLowerCase().replace(/[^a-z]/g, ""), formData);
       setStatus("connected");
       setOpen(false);
     } finally {

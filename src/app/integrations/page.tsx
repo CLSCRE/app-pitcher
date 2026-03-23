@@ -107,11 +107,12 @@ const mcpIntegrations = [
 ];
 
 export default function IntegrationsPage() {
-  async function handleConnect(data: Record<string, string>) {
-    // In production, this would save to a secure credentials store
-    console.log("Connecting with:", Object.keys(data));
-    // Simulate connection delay
-    await new Promise((r) => setTimeout(r, 1000));
+  async function handleConnect(integration: string, data: Record<string, string>) {
+    await fetch("/api/integrations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ integration, credentials: data }),
+    });
   }
 
   return (

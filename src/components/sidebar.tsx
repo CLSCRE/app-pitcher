@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -26,12 +26,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const campaigns = [
-  { slug: "land-to-yield", name: "Land to Yield", color: "#16a34a", icon: "🌿" },
-  { slug: "professional-scheduler", name: "Pro Scheduler", color: "#2563eb", icon: "📅" },
-];
+interface Campaign {
+  slug: string;
+  name: string;
+  primaryColor: string | null;
+}
 
 const mainNav = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -57,9 +58,49 @@ const bottomNav = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [activeCampaign, setActiveCampaign] = useState(campaigns[0]);
+  const router = useRouter();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
 
-  const campaignNav = getCampaignNav(activeCampaign.slug);
+  // Detect active campaign from URL
+  const slugFromUrl = pathname.match(/\/campaigns\/([^/]+)/)?.[1];
+
+  const [activeCampaignSlug, setActiveCampaignSlug] = useState<string | null>(slugFromUrl || null);
+
+  // Fetch campaigns and pending count
+  useEffect(() => {
+    fetch("/api/sidebar-data")
+      .then((r) => r.json())
+      .then((data) => {
+        setCampaigns(data.campaigns || []);
+        setPendingCount(data.pendingCount || 0);
+        if (!activeCampaignSlug && data.campaigns?.length > 0) {
+          setActiveCampaignSlug(data.campaigns[0].slug);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Sync active campaign when URL changes
+  useEffect(() => {
+    if (slugFromUrl) {
+      setActiveCampaignSlug(slugFromUrl);
+    }
+  }, [slugFromUrl]);
+
+  const activeCampaign = campaigns.find((c) => c.slug === activeCampaignSlug) || campaigns[0];
+  const campaignNav = activeCampaign ? getCampaignNav(activeCampaign.slug) : [];
+
+  function handleCampaignSwitch(campaign: Campaign) {
+    setActiveCampaignSlug(campaign.slug);
+    // Navigate to the same sub-page but for the new campaign
+    if (slugFromUrl) {
+      const subPath = pathname.replace(`/campaigns/${slugFromUrl}`, "");
+      router.push(`/campaigns/${campaign.slug}${subPath}`);
+    } else {
+      router.push(`/campaigns/${campaign.slug}`);
+    }
+  }
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border bg-card">
@@ -91,9 +132,9 @@ export function Sidebar() {
           >
             <item.icon className="h-4 w-4" />
             {item.label}
-            {item.badge && (
+            {item.badge && pendingCount > 0 && (
               <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px]">
-                3
+                {pendingCount}
               </Badge>
             )}
           </Link>
@@ -107,36 +148,40 @@ export function Sidebar() {
         <p className="mb-2 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Campaign
         </p>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors hover:bg-accent"
-          >
-            <span className="flex items-center gap-2 truncate">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: activeCampaign.color }}
-              />
-              {activeCampaign.name}
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {campaigns.map((campaign) => (
-              <DropdownMenuItem
-                key={campaign.slug}
-                onClick={() => setActiveCampaign(campaign)}
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: campaign.color }}
-                  />
-                  {campaign.name}
-                </span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {activeCampaign ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors hover:bg-accent"
+            >
+              <span className="flex items-center gap-2 truncate">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: activeCampaign.primaryColor || "#888" }}
+                />
+                {activeCampaign.name}
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {campaigns.map((campaign) => (
+                <DropdownMenuItem
+                  key={campaign.slug}
+                  onClick={() => handleCampaignSwitch(campaign)}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: campaign.primaryColor || "#888" }}
+                    />
+                    {campaign.name}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <p className="px-2.5 text-xs text-muted-foreground">Loading...</p>
+        )}
       </div>
 
       {/* Campaign Nav */}

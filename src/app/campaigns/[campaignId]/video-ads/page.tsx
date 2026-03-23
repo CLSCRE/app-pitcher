@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Video, Clock, Film } from "lucide-react";
 import Link from "next/link";
 import { SubmitForApproval } from "@/components/submit-for-approval";
+import { HeyGenRender } from "@/components/heygen-render";
 
 const statusColors: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   draft: "secondary",
@@ -82,6 +83,13 @@ export default async function VideoAdsPage({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {script.style === "heygen-avatar" && (
+                      <HeyGenRender
+                        scriptId={script.id}
+                        heygenVideoId={script.heygenVideoId}
+                        heygenStatus={script.heygenStatus}
+                      />
+                    )}
                     <SubmitForApproval
                       contentType="video-script"
                       contentId={script.id}
