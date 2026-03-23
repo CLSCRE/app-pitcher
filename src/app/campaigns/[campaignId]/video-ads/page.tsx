@@ -40,12 +40,20 @@ export default async function VideoAdsPage({
           <h1 className="text-2xl font-bold tracking-tight">Video Ad Scripts</h1>
           <p className="text-sm text-muted-foreground">{campaign.name}</p>
         </div>
-        <Link
-          href={`/campaigns/${campaign.slug}/video-ads/new`}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          + Generate New Script
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/campaigns/${campaign.slug}/video-ads/gallery`}
+            className="rounded-md border border-input px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
+          >
+            Video Gallery
+          </Link>
+          <Link
+            href={`/campaigns/${campaign.slug}/video-ads/new`}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            + Generate New Script
+          </Link>
+        </div>
       </div>
 
       {campaign.videoScripts.length === 0 ? (
